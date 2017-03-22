@@ -18,6 +18,11 @@ Three tarballs can be downloaded for those interested in the profile data.
 + 15,000 [ordinary profiles](http://betaname.net/resources/data/romance/real-profiles.tar.gz) (2 M)
 + 17,500 [profile images](http://betaname.net/resources/data/romance/images.tar.gz) (118 M)
 
+Additionally, a [CSV file](http://betaname.net/resources/data/romance/profiles.csv) is
+ available which contains a curtailed selection of the profile data, omitting images, text and 
+multi-response items (tags, justifications) but including a `scam` field to indicate whether the
+profile is of a scammer or not (1 is positive). 
+
 ## Data Format
 
 The profile data is stored as individual single-line JSON files, named according
