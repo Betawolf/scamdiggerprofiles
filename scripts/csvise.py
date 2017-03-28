@@ -10,15 +10,15 @@ args = parser.parse_args()
 
 attributes = ['scam','username','age','gender','location','ethnicity','occupation','status','year_reported','month_reported','name','inet','phone','email','children','smoking','drinking','religion','orientation', 'match_age','intent']
 
-scam = 1 if args.dir == 'scam' else 0
+#scam = 1 if args.dir == 'scam' else 0
 
 outhandle = csv.writer(open(args.outfile, 'w'))
 outhandle.writerow(attributes)
 
 for jsonfile in os.listdir(args.dir):
   profile = json.load(open(args.dir+os.sep+jsonfile,'r'))
-  values = [scam]
-  for k in attributes[1:]:
+  values = []
+  for k in attributes:
     if k in profile:
       values.append(profile[k])
     else:
