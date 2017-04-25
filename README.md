@@ -43,14 +43,17 @@ The following data has been partially cleaned and segmented to support machine l
 many scammers had fields coded with 'or' values where the annotators have combined multiple sightings of the same
 profile using slightly different values for age, occupation, etc. The data below has exploded these options into each 
 of the possible combinations. This means there are now 5,402 scam profiles in total. Profiles are randomly assigned to
-training and test sets, but without allowing any 'duplicated' scam profiles to appear in both sets.
+training, test and validation sets, but without allowing any 'duplicated' scam profiles to appear in both sets.
 
 Other cleaning has included standardising the coding of missing data (including adding all variables to all JSON objects)
 and some standardisation of case (but not spelling) on some categorical demographic data. Objects now record their scam
-and non-scam status internally, and keys are sorted.  
+and non-scam status internally, and keys are sorted. All profiles have `latitude`,`longitude` and `country` geocoding
+results added, based on queries using the `location` field. Profiles in the _training_ set have a `fold` variable which
+divides them into one of 10 randomly assigned folds, for the purposes of internal crossvalidation.
 
-+  [66% training set](http://betaname.net/resources/data/romance/train.tar.gz) (13,486, 2.5 M) 
-+  [33% test set](http://betaname.net/resources/data/romance/test.tar.gz) (6,636, 1.2 M)
++  [60% training set](http://betaname.net/resources/data/romance/newtrain.tar.gz) (12,076, 2.5 M) 
++  [20% test set](http://betaname.net/resources/data/romance/newtest.tar.gz) (4,073, 840 K)
++  [20% validation set](http://betaname.net/resources/data/romance/newvalidation.tar.gz) (3,973, 813 K)
 
 The complete cleaned data is also available in [CSV](http://betaname.net/resources/data/romance/clean.csv) for easier 
 assessment of the demographic variables. This remains mappable to the excluded field files given above.
@@ -68,6 +71,9 @@ profiles have them.
 | age   | Yes  | Yes  | The presented age of the profile. |
 | gender   | Yes  | Yes  | The presented gender of the profile |
 | location   | Yes  | Yes  | The location, given as a string, usually specific to city-level. |
+| latitude   | Yes  | Yes  | The latitude of the given location field. (Inferred) |
+| longitude   | Yes  | Yes  | The longitude of the given location field. (Inferred) |
+| country   | Yes  | Yes  | The country for the given location. Given in local language. (Inferred) |
 | ethnicity | Yes | Yes | The user's given race/ethnic identity (free-form) |
 | occupation | Yes | Yes | The user's reported occupation (free-form) |
 | status | Yes | Yes | The user's reported marital status (e.g. 'single','widowed','separated') |
