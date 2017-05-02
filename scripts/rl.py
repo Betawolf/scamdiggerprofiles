@@ -17,6 +17,7 @@ outhandle.writerow(attributes)
 for jsonfile in os.listdir(args.dir):
   profile = json.load(open(args.dir+os.sep+jsonfile,'r'))
   if 'username' in profile and args.var in profile:
-    for v in profile[args.var]:
+      v = profile[args.var]
+#    for v in profile[args.var]:
       values = [profile['username'], v]
       outhandle.writerow(values)
