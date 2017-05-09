@@ -9,15 +9,15 @@ parser.add_argument('outfile', help='The file to write to.')
 parser.add_argument('var', help='The variable to select.')
 args = parser.parse_args()
 
-attributes = ['username',args.var]
+attributes = ['file','username',args.var]
 
 outhandle = csv.writer(open(args.outfile, 'w'))
 outhandle.writerow(attributes)
 
 for jsonfile in os.listdir(args.dir):
   profile = json.load(open(args.dir+os.sep+jsonfile,'r'))
-  if 'username' in profile and args.var in profile:
-      v = profile[args.var]
-#    for v in profile[args.var]:
-      values = [profile['username'], v]
+  fn = jsonfile[:jsonfile.rindex('.')]
+  if args.var in profile and profile[args.var]:
+    for v in profile[args.var]:
+      values = [fn, profile['username'], v]
       outhandle.writerow(values)
