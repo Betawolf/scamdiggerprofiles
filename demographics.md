@@ -6,12 +6,12 @@ non-scam profile data) so we can discard the others.
 
 
 ```r
- train <- read.csv("newtrain.csv",na.strings='')
+ train <- read.csv("demographics.csv",na.strings='')
 ```
 
 This leaves us with the scam outcome variable and six predictor variables to
 work with: username, age, gender, ethnicity, occupation, location. I've also geocoded the location data to produce the 
-country, latitude variables. One of those variables is 'username', which
+country, longitude variables. One of those variables is 'username', which
 doesn't look at all predictive, so we can omit it. I'll compare each of the
 remainder in turn and in various combinations
 to see what we might expect to be predictive, before building a classifier and
@@ -26,7 +26,7 @@ testing it on the test data. First, divide the data on the scam/real line.
 ```
 
 ```
-## [1] 3140   11
+## [1] 5402   10
 ```
 
 ```r
@@ -34,7 +34,7 @@ testing it on the test data. First, divide the data on the scam/real line.
 ```
 
 ```
-## [1] 8936   11
+## [1] 14720    10
 ```
 
 You'll note an imbalance between the data, which is fine at this stage.
@@ -53,6 +53,14 @@ First, the gender variable. I'll quickly define a useful tabulation function.
 	v <- cbind(head(rg,10), head(sg,10))
 	kable(v)
  }
+ tprop <- function(realvec, scamvec){
+	rg <- as.data.frame(prop.table(sort(table(realvec), decreasing=T)))
+	sg <- as.data.frame(prop.table(sort(table(scamvec), decreasing=T)))
+	names(rg)[1] <- "Real Profiles"
+	names(sg)[1] <- "Scam Profiles"
+	v <- cbind(head(rg,10), head(sg,10))
+	print(xtable(v), include.rownames=F)
+ }
 ```
 
 Then we can compare the proportions for scam and real profiles.
@@ -66,8 +74,8 @@ Then we can compare the proportions for scam and real profiles.
 
 |Real Profiles |      Freq|Scam Profiles |      Freq|
 |:-------------|---------:|:-------------|---------:|
-|male          | 0.5945276|male          | 0.5977707|
-|female        | 0.4054724|female        | 0.4022293|
+|male          | 0.5932076|male          | 0.6086635|
+|female        | 0.4067924|female        | 0.3913365|
 
 This doesn't look distinctive, both sets are about 60% male. Gender might be
 important in combination with other variables, though. 
@@ -76,7 +84,7 @@ important in combination with other variables, though.
 ## Age
 
 Initially, the age variable looks similarly unpromising. The mean of the scam
-profiles is 42.48 compared to 40.4 
+profiles is 42.39 compared to 40.33 
 for the real profiles. However, when you examine
 the distribution of these ages, you get a different story.
 
@@ -98,8 +106,8 @@ by gender, we see something more striking in the means:
  
  gender     | scam | real |
 ------- |------ | ------
-female | 31.83 |  41.18
-male   | 49.65 |  39.87
+female | 31.47 |  41.22
+male   | 49.41 |  39.72
 
 In the real data, the average age is around 40 for both males and females. In
 the scam data, by contrast, the males are about 50 and the females are about 30.
@@ -129,17 +137,17 @@ Moving on to the ethnicity information.
 
 |Real Profiles    |      Freq|Scam Profiles    |      Freq|
 |:----------------|---------:|:----------------|---------:|
-|white            | 0.4383393|white            | 0.6563694|
-|hispanic         | 0.3183751|native american  | 0.1085987|
-|other            | 0.0713966|mixed            | 0.0796178|
-|black            | 0.0562892|black            | 0.0614650|
-|mixed            | 0.0518129|other            | 0.0394904|
-|asian            | 0.0419651|asian            | 0.0200637|
-|native american  | 0.0097359|middle eastern   | 0.0165605|
-|middle eastern   | 0.0092883|hispanic         | 0.0162420|
-|pacific islander | 0.0027977|pacific islander | 0.0015924|
+|white            | 0.4387228|white            | 0.6610515|
+|hispanic         | 0.3169158|native american  | 0.1106997|
+|other            | 0.0709239|mixed            | 0.0710848|
+|black            | 0.0563859|black            | 0.0633099|
+|mixed            | 0.0512908|other            | 0.0405405|
+|asian            | 0.0437500|asian            | 0.0199926|
+|middle eastern   | 0.0103940|hispanic         | 0.0162903|
+|native american  | 0.0087636|middle eastern   | 0.0153647|
+|pacific islander | 0.0028533|pacific islander | 0.0016660|
  
-We can see a couple of important differences. Firstly, tbe scam data has a
+We can see a couple of important differences. Firstly, the scam data has a
 vanishingly low reporting of hispanic ethnicity, which is the second-largest
 group in the real dataset, likely predominantly US-based. This is pretty
 strange, and probably says something about who it is the scammers are targeting.
@@ -156,7 +164,7 @@ scam profiles seem to have been filled in rather hastily.
 
 ## Occupation
 
-There's a long tail in occupation, some 2677 different
+There's a long tail in occupation, some 4001 different
 values. Many of these are minor variants of each other, so I need to group as many of
 them as possible into a defined set of categories. Excuse the long code block.
 
@@ -275,16 +283,16 @@ kprop(real$occ_group[real$gender == 'male'], scam$occ_group[scam$gender == 'male
 
 |Real Profiles |      Freq|Scam Profiles |      Freq|
 |:-------------|---------:|:-------------|---------:|
-|other         | 0.1454957|engineering   | 0.2517986|
-|self-employed | 0.0817942|military      | 0.2464029|
-|engineering   | 0.0704862|self-employed | 0.1061151|
-|technology    | 0.0584244|business      | 0.0605516|
-|student       | 0.0523935|construction  | 0.0605516|
-|retired       | 0.0482473|contractor    | 0.0395683|
-|construction  | 0.0437241|other         | 0.0347722|
-|service       | 0.0388240|medical       | 0.0251799|
-|transport     | 0.0365624|sales         | 0.0167866|
-|manager       | 0.0324161|manager       | 0.0161871|
+|other         | 0.1458430|military      | 0.2519525|
+|self-employed | 0.0747794|engineering   | 0.2478778|
+|engineering   | 0.0733860|self-employed | 0.0991511|
+|technology    | 0.0543428|business      | 0.0560272|
+|student       | 0.0524849|construction  | 0.0556876|
+|retired       | 0.0503948|other         | 0.0390492|
+|construction  | 0.0480725|contractor    | 0.0359932|
+|service       | 0.0392476|medical       | 0.0322581|
+|transport     | 0.0380864|manager       | 0.0190153|
+|manual        | 0.0315838|sales         | 0.0169779|
 
 Ignoring the long tail category of 'other', which captures a lot of odd or misspelt occupations,
 the largest employment group for actual males was 'self-employed', followed by careers in engineering
@@ -306,16 +314,16 @@ kprop(real$occ_group[real$gender == 'male' & real$age <= 30], scam$occ_group[sca
 
 |Real Profiles |      Freq|Scam Profiles |      Freq|
 |:-------------|---------:|:-------------|---------:|
-|student       | 0.1818182|student       | 0.2380952|
-|other         | 0.1632997|engineering   | 0.1904762|
-|engineering   | 0.0774411|carer         | 0.0952381|
-|technology    | 0.0471380|government    | 0.0952381|
-|service       | 0.0420875|manager       | 0.0952381|
-|self-employed | 0.0404040|military      | 0.0952381|
-|construction  | 0.0370370|self-employed | 0.0952381|
-|manual        | 0.0336700|academic      | 0.0476190|
-|academic      | 0.0269360|business      | 0.0476190|
-|finance       | 0.0252525|accounting    | 0.0000000|
+|student       | 0.1886196|engineering   | 0.1714286|
+|other         | 0.1728135|student       | 0.1428571|
+|engineering   | 0.0684932|business      | 0.1142857|
+|technology    | 0.0432034|architect     | 0.0857143|
+|construction  | 0.0410959|military      | 0.0857143|
+|service       | 0.0379347|carer         | 0.0571429|
+|manual        | 0.0347734|government    | 0.0571429|
+|hospitality   | 0.0337197|manager       | 0.0571429|
+|self-employed | 0.0316122|other         | 0.0571429|
+|finance       | 0.0263435|sales         | 0.0571429|
 
 ```r
 kprop(real$occ_group[real$gender == 'male' & real$age > 30 & real$age <= 40], scam$occ_group[scam$gender == 'male' & scam$age > 30 & scam$age <= 40])
@@ -325,16 +333,16 @@ kprop(real$occ_group[real$gender == 'male' & real$age > 30 & real$age <= 40], sc
 
 |Real Profiles |      Freq|Scam Profiles |      Freq|
 |:-------------|---------:|:-------------|---------:|
-|other         | 0.1808219|military      | 0.2170543|
-|engineering   | 0.0808219|engineering   | 0.1937984|
-|self-employed | 0.0726027|self-employed | 0.1085271|
-|technology    | 0.0643836|other         | 0.0775194|
-|construction  | 0.0424658|contractor    | 0.0620155|
-|manual        | 0.0383562|accounting    | 0.0465116|
-|service       | 0.0369863|business      | 0.0465116|
-|transport     | 0.0342466|construction  | 0.0387597|
-|hospitality   | 0.0328767|analyst       | 0.0232558|
-|sales         | 0.0328767|manager       | 0.0232558|
+|other         | 0.1725000|military      | 0.2744361|
+|engineering   | 0.0841667|engineering   | 0.1691729|
+|self-employed | 0.0633333|business      | 0.0789474|
+|technology    | 0.0608333|self-employed | 0.0714286|
+|construction  | 0.0516667|other         | 0.0563910|
+|service       | 0.0450000|contractor    | 0.0488722|
+|manual        | 0.0408333|real estate   | 0.0375940|
+|transport     | 0.0358333|medical       | 0.0300752|
+|hospitality   | 0.0316667|accounting    | 0.0225564|
+|manager       | 0.0316667|finance       | 0.0225564|
 
 ```r
 kprop(real$occ_group[real$gender == 'male' & real$age > 40 ], scam$occ_group[scam$gender == 'male' & scam$age > 40 ])
@@ -344,16 +352,16 @@ kprop(real$occ_group[real$gender == 'male' & real$age > 40 ], scam$occ_group[sca
 
 |Real Profiles |      Freq|Scam Profiles |      Freq|
 |:-------------|---------:|:-------------|---------:|
-|other         | 0.1181339|engineering   | 0.2577456|
-|self-employed | 0.1053424|military      | 0.2511536|
-|retired       | 0.0955606|self-employed | 0.1061305|
-|engineering   | 0.0617005|construction  | 0.0632828|
-|technology    | 0.0601956|business      | 0.0619644|
-|transport     | 0.0504138|contractor    | 0.0375742|
-|construction  | 0.0474041|other         | 0.0316414|
-|manager       | 0.0391272|medical       | 0.0257086|
-|service       | 0.0383747|sales         | 0.0171391|
-|manual        | 0.0263356|manager       | 0.0145023|
+|other         | 0.1191470|engineering   | 0.2570023|
+|retired       | 0.1001391|military      | 0.2517033|
+|self-employed | 0.1001391|self-employed | 0.1025738|
+|engineering   | 0.0695410|construction  | 0.0601817|
+|technology    | 0.0556328|business      | 0.0529902|
+|transport     | 0.0500695|other         | 0.0370931|
+|construction  | 0.0491423|contractor    | 0.0348221|
+|service       | 0.0366249|medical       | 0.0329296|
+|manager       | 0.0333797|manager       | 0.0193036|
+|teacher       | 0.0259620|sales         | 0.0166540|
 
 There's essentially just two groups here, the under-30s males, which are more likely to present as students 
 and employees, and the over-30s males, which are much more likely to claim to be in the military or engineering
@@ -368,16 +376,16 @@ kprop(real$occ_group[real$gender == 'female'], scam$occ_group[scam$gender == 'fe
 
 |Real Profiles |      Freq|Scam Profiles |      Freq|
 |:-------------|---------:|:-------------|---------:|
-|other         | 0.1532033|student       | 0.2009724|
-|student       | 0.1019499|self-employed | 0.1693679|
-|carer         | 0.0763231|carer         | 0.1004862|
-|service       | 0.0623955|sales         | 0.0794165|
-|clerical      | 0.0584958|military      | 0.0486224|
-|teacher       | 0.0579387|business      | 0.0429498|
-|retired       | 0.0484680|fashion       | 0.0397083|
-|self-employed | 0.0395543|finance       | 0.0388979|
-|medical       | 0.0362117|other         | 0.0364668|
-|housewife     | 0.0323120|service       | 0.0316045|
+|other         | 0.1501856|student       | 0.2055126|
+|student       | 0.1015862|self-employed | 0.1644101|
+|carer         | 0.0776240|carer         | 0.1025145|
+|service       | 0.0644617|sales         | 0.0730174|
+|clerical      | 0.0580493|military      | 0.0488395|
+|teacher       | 0.0577118|fashion       | 0.0377176|
+|retired       | 0.0489369|business      | 0.0367505|
+|self-employed | 0.0408370|other         | 0.0362669|
+|medical       | 0.0350996|finance       | 0.0343327|
+|housewife     | 0.0317246|service       | 0.0323985|
 
 For females, the scam profiles do manage to get the top professions right -- 'student' and 'carer' 
 categories (the latter of which includes 'nurse'), but the scam data is once again highly 
@@ -399,16 +407,16 @@ kprop(real$occ_group[real$gender == 'female' & real$age <= 30], scam$occ_group[s
 
 |Real Profiles |      Freq|Scam Profiles |      Freq|
 |:-------------|---------:|:-------------|---------:|
-|student       | 0.3541147|student       | 0.3229167|
-|other         | 0.1571072|self-employed | 0.1649306|
-|carer         | 0.0573566|carer         | 0.0746528|
-|clerical      | 0.0523691|sales         | 0.0659722|
-|self-employed | 0.0399002|fashion       | 0.0555556|
-|service       | 0.0399002|other         | 0.0381944|
-|housewife     | 0.0274314|finance       | 0.0312500|
-|medical       | 0.0249377|business      | 0.0295139|
-|finance       | 0.0224439|service       | 0.0243056|
-|academic      | 0.0199501|artist        | 0.0190972|
+|student       | 0.3538913|student       | 0.3170732|
+|other         | 0.1556535|self-employed | 0.1463415|
+|carer         | 0.0528634|carer         | 0.0819512|
+|clerical      | 0.0440529|sales         | 0.0663415|
+|service       | 0.0440529|fashion       | 0.0526829|
+|self-employed | 0.0293686|other         | 0.0390244|
+|finance       | 0.0279001|finance       | 0.0282927|
+|teacher       | 0.0264317|service       | 0.0282927|
+|medical       | 0.0249633|artist        | 0.0234146|
+|housewife     | 0.0234949|business      | 0.0234146|
 
 ```r
 kprop(real$occ_group[real$gender == 'female' & real$age > 30 & real$age <= 40], scam$occ_group[scam$gender == 'female' & scam$age > 30 & scam$age <= 40])
@@ -418,16 +426,16 @@ kprop(real$occ_group[real$gender == 'female' & real$age > 30 & real$age <= 40], 
 
 |Real Profiles |      Freq|Scam Profiles |      Freq|
 |:-------------|---------:|:-------------|---------:|
-|other         | 0.1493776|self-employed | 0.1816578|
-|clerical      | 0.0726141|carer         | 0.1199295|
-|service       | 0.0726141|student       | 0.1022928|
-|teacher       | 0.0705394|sales         | 0.0899471|
-|carer         | 0.0643154|business      | 0.0546737|
-|sales         | 0.0456432|military      | 0.0529101|
-|student       | 0.0456432|teacher       | 0.0458554|
-|academic      | 0.0414938|manager       | 0.0440917|
-|self-employed | 0.0394191|finance       | 0.0423280|
-|medical       | 0.0373444|medical       | 0.0423280|
+|other         | 0.1557592|self-employed | 0.1877778|
+|clerical      | 0.0824607|carer         | 0.1255556|
+|service       | 0.0719895|student       | 0.1055556|
+|teacher       | 0.0680628|sales         | 0.0822222|
+|carer         | 0.0589005|military      | 0.0566667|
+|student       | 0.0431937|business      | 0.0466667|
+|academic      | 0.0392670|finance       | 0.0388889|
+|sales         | 0.0392670|medical       | 0.0388889|
+|self-employed | 0.0392670|service       | 0.0388889|
+|housewife     | 0.0366492|other         | 0.0344444|
 
 ```r
 kprop(real$occ_group[real$gender == 'female' & real$age > 40 ], scam$occ_group[scam$gender == 'female' & scam$age > 40 ])
@@ -437,16 +445,16 @@ kprop(real$occ_group[real$gender == 'female' & real$age > 40 ], scam$occ_group[s
 
 |Real Profiles |      Freq|Scam Profiles |      Freq|
 |:-------------|---------:|:-------------|---------:|
-|other         | 0.1535088|military      | 0.2307692|
-|retired       | 0.0953947|carer         | 0.1428571|
-|carer         | 0.0910088|self-employed | 0.1208791|
-|teacher       | 0.0679825|sales         | 0.0989011|
-|service       | 0.0668860|finance       | 0.0659341|
-|clerical      | 0.0537281|business      | 0.0549451|
-|manager       | 0.0405702|legal         | 0.0439560|
-|medical       | 0.0405702|student       | 0.0439560|
-|self-employed | 0.0394737|other         | 0.0329670|
-|housewife     | 0.0328947|service       | 0.0329670|
+|other         | 0.1449275|military      | 0.2323944|
+|carer         | 0.0981555|self-employed | 0.1478873|
+|retired       | 0.0955204|carer         | 0.1056338|
+|service       | 0.0698287|business      | 0.0704225|
+|teacher       | 0.0665349|sales         | 0.0633803|
+|clerical      | 0.0520422|engineering   | 0.0492958|
+|self-employed | 0.0467721|finance       | 0.0492958|
+|medical       | 0.0408432|retired       | 0.0352113|
+|housewife     | 0.0329381|specialist    | 0.0352113|
+|manager       | 0.0316206|student       | 0.0352113|
 
 Here we see a more distinct division of the age groups. Younger females are very commonly students
 (as in the real data); those aged 30-40 are mostly self-employed (unlike the real data); and, bizarrely, the 
@@ -467,15 +475,13 @@ profiles = ifelse(train$scam, "scam", "real")
 world_map <- borders("world", colour="gray50", fill="gray50")
 
 
-combined_points <- ggplot() + world_map + geom_count(data=train,  aes(x= longitude, y=latitude, fill = profiles, color=profiles), alpha=0.5, shape = 21)
-plot(combined_points)
-```
+#combined_points <- ggplot() + world_map + geom_count(data=train,  aes(x= longitude, y=latitude, fill = profiles, color=profiles), alpha=0.5, shape = 21) + coord_fixed()
+combined_points <- ggplot() + world_map + geom_point(data=train, aes(x=longitude, y=latitude, fill=profiles, color=profiles), shape=21, alpha=0.04) + stat_density_2d(data=train,  aes(x= longitude, y=latitude, colour=profiles), n=75, h=c(10,10)) + coord_fixed()
 
+#png('combo.png')
+#plot(combined_points)
+#dev.off()
 ```
-## Warning: Removed 901 rows containing non-finite values (stat_sum).
-```
-
-![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png)
 
 This combined plot is a little hard to read, but it can be helped by looking at the separate plots below:
 
@@ -486,7 +492,7 @@ plot(real_map)
 ```
 
 ```
-## Warning: Removed 770 rows containing non-finite values (stat_sum).
+## Warning: Removed 1248 rows containing non-finite values (stat_sum).
 ```
 
 ![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png)
@@ -497,7 +503,7 @@ plot(scam_map)
 ```
 
 ```
-## Warning: Removed 131 rows containing non-finite values (stat_sum).
+## Warning: Removed 224 rows containing non-finite values (stat_sum).
 ```
 
 ![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-2.png)
@@ -588,16 +594,16 @@ kprop(real$location, scam$location)
 
 |Real Profiles                         |      Freq|Scam Profiles                          |      Freq|
 |:-------------------------------------|---------:|:--------------------------------------|---------:|
-|Bogotá, Bogota, Colombia              | 0.0102466|New York, United States                | 0.0874003|
-|Lima, Peru                            | 0.0076568|Los Angeles, California, United States | 0.0513557|
-|Lima, Perú                            | 0.0065308|London, United Kingdom                 | 0.0334928|
-|Quito, Ecuador                        | 0.0064182|Dallas, Texas, United States           | 0.0165869|
-|Bogotá, Colombia                      | 0.0063056|Houston, Texas, United States          | 0.0165869|
-|Panama City, Panama                   | 0.0061930|Miami, Florida, United States          | 0.0140351|
-|Cali, Cali, Valle del Cauca, Colombia | 0.0060804|New York                               | 0.0130781|
-|Santo Domingo, Dominican Republic     | 0.0060804|Berlin, Germany                        | 0.0127592|
-|Bogotá, Bogotá, Colombia              | 0.0056300|Chicago, Illinois, United States       | 0.0086124|
-|Distrito de Lima, Perú                | 0.0056300|Austin, Texas, United States           | 0.0079745|
+|Bogotá, Bogota, Colombia              | 0.0095668|New York, United States                | 0.0866098|
+|Lima, Peru                            | 0.0071751|Los Angeles, California, United States | 0.0511869|
+|London, UK                            | 0.0066967|London, United Kingdom                 | 0.0331973|
+|Quito, Ecuador                        | 0.0066284|Dallas, Texas, United States           | 0.0166914|
+|Lima, Perú                            | 0.0063551|Miami, Florida, United States          | 0.0166914|
+|Bogotá, Bogotá, Colombia              | 0.0061501|Houston, Texas, United States          | 0.0153932|
+|Panama City, Panama                   | 0.0060817|New York                               | 0.0120549|
+|Cali, Cali, Valle del Cauca, Colombia | 0.0059451|Berlin, Germany                        | 0.0105712|
+|Distrito de Lima, Perú                | 0.0059451|Austin, Texas, United States           | 0.0085312|
+|Bogotá, Colombia                      | 0.0056034|Texas, United States                   | 0.0074184|
 
 As expected, the scammers are more tightly clustered (9% in just New York, compared to the 
 real users' largest clustering of 1%). Once again, we see the effects of the anti-hispanic bias
@@ -613,19 +619,65 @@ kprop(real$country, scam$country)
 
 |Real Profiles            |      Freq|Scam Profiles            |      Freq|
 |:------------------------|---------:|:------------------------|---------:|
-|United States of America | 0.3530492|United States of America | 0.7487537|
-|Colombia                 | 0.0715160|UK                       | 0.0717846|
-|México                   | 0.0546167|Deutschland              | 0.0269192|
-|UK                       | 0.0432280|Canada                   | 0.0132935|
-|Perú                     | 0.0410238|Australia                | 0.0122964|
-|España                   | 0.0356356|Ghana                    | 0.0089731|
-|Venezuela                | 0.0287779|РФ                       | 0.0079761|
-|РФ                       | 0.0238795|Svizra                   | 0.0069791|
-|Canada                   | 0.0228998|South Africa             | 0.0063144|
-|Ecuador                  | 0.0204506|Sverige                  | 0.0049850|
+|United States of America | 0.3513955|United States of America | 0.7381228|
+|Colombia                 | 0.0692548|UK                       | 0.0730012|
+|México                   | 0.0531473|Deutschland              | 0.0254925|
+|UK                       | 0.0449822|Canada                   | 0.0160294|
+|Perú                     | 0.0412708|Australia                | 0.0125531|
+|España                   | 0.0365202|РФ                       | 0.0090769|
+|Venezuela                | 0.0288747|Ghana                    | 0.0086906|
+|Canada                   | 0.0236787|Svizra                   | 0.0059869|
+|РФ                       | 0.0236045|Україна                  | 0.0057937|
+|Ecuador                  | 0.0201158|South Africa             | 0.0050212|
 
 Once again, we see a massive concentration in scam profiles. Nearly three-quarters of them are purporting to be
 in the US, compared with more like a third of the real data. The UK and Germany are the secondary targets.
 The more honest answer of Ghana also makes the top list. Country names here are from the geocoding from the original
 location data, which included more variation in reporting style. 
 
+## Marital Status
+
+Finally, the previously-overlooked marital status. Again a little bit of cleanup
+needed.
+
+
+```r
+marry <- function(level){
+	if (grepl('si[ng]{2}le', level)){
+		return('single')
+	} else if (grepl('win?doe?w', level)){
+		return('widowed')
+	} else if (grepl('married', level)){
+		return('married')
+	} else if (grepl('divorce', level)){
+		return('divorced')
+	} else if (grepl('sep[ae]?rat', level)){
+		return('separated')
+	} else if (grepl('relation|taken', level)){
+		return('in relationship')
+	}
+	return('other')
+}
+
+ kprop(sapply(as.character(real$status), marry), sapply(as.character(scam$status), marry))
+```
+
+
+
+|Real Profiles   |      Freq|Scam Profiles   |      Freq|
+|:---------------|---------:|:---------------|---------:|
+|single          | 0.5669837|single          | 0.5129582|
+|divorced        | 0.2067255|widowed         | 0.2837838|
+|separated       | 0.0948370|divorced        | 0.1421696|
+|other           | 0.0648098|other           | 0.0468345|
+|widowed         | 0.0369565|separated       | 0.0118475|
+|married         | 0.0154891|married         | 0.0022214|
+|in relationship | 0.0141984|in relationship | 0.0001851|
+
+Whilst both real and scam users were most commonly `single`, the scammers prefer
+to present themselves as `widowed` rather than any of the other categories,
+perhaps because this is the most heart-tugging option. Scammers are far less
+likely than real users to have a dating profile which is married or in a
+relationship, no doubt because this sort of dating is very niche and puts off
+potential victims. The `other` category here includes where data was missing.
+```

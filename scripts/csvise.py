@@ -8,7 +8,7 @@ parser.add_argument('dir', help='The directory holding the JSON files.')
 parser.add_argument('outfile', help='The file to write to.')
 args = parser.parse_args()
 
-attributes = ['scam','username','age','gender','ethnicity','occupation','location','country','longitude','latitude']
+attributes = ['scam','username','age','gender','ethnicity','occupation','location','country','longitude','latitude','status']
 
 outhandle = csv.writer(open(args.outfile, 'w'))
 outhandle.writerow(attributes)
