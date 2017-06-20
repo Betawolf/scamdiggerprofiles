@@ -12,51 +12,40 @@ detailed below, some different profile data is available for scammers and
 ordinary users. 
 
 This repository itself only contains the scripts used to collect and process the linked 
-data. Raw and prepared forms of the data can be downloaded from the links below.
+data. Raw and prepared forms of the data can be gathered based on the use.
 
 ### Raw
+
+Run `scripts/scamdownloader.py` and `scripts/realdownloader.py`
 
 The profile data is stored as individual single-line JSON files, named according
 to their page name from the source. The files should concatenate into a JSON-L
 format without difficulty.
 
-+ 3,500 [scammer profiles](http://betaname.net/resources/data/romance/scam-profiles.tar.gz) (1.6 M)
-+ 15,000 [ordinary profiles](http://betaname.net/resources/data/romance/real-profiles.tar.gz) (2 M)
-+ 17,500 [profile images](http://betaname.net/resources/data/romance/images.tar.gz) (118 M)
-
-For those not used to working with JSON, there is a [CSV file](http://betaname.net/resources/data/romance/profiles.csv)
- available which contains a curtailed selection of the profile data, omitting images, text and 
+For those not used to working with JSON, it is possible to create a CSV file
+ which contains a curtailed selection of the profile data, omitting images, text and 
 multi-response items but including a `scam` field to indicate whether the
-profile is of a scammer or not (1 is positive). The missing fields can be explored using the below CSV files,
-which relate to the other profile data using the username of the profile.
+profile is of a scammer or not (1 is positive). This is accomplished through `csvise.py`
 
-+ [justifications](http://betaname.net/resources/data/romance/justifications.csv)
-+ [tags](http://betaname.net/resources/data/romance/tags.csv)
-+ [images](http://betaname.net/resources/data/romance/images.csv)
-+ [messages](http://betaname.net/resources/data/romance/messages.csv)
-+ [description](http://betaname.net/resources/data/romance/description.csv)
-
+The missing fields can be explored using additional CSV files,
+which relate to the other profile data using the username of the profile. Pass arguments to `rl.py`.
 
 ### Prepared
 
-The following data has been partially cleaned and segmented to support machine learning. Within the original data,
-many scammers had fields coded with 'or' values where the annotators have combined multiple sightings of the same
-profile using slightly different values for age, occupation, etc. The data below has exploded these options into each 
-of the possible combinations. This means there are now 5,402 scam profiles in total. Profiles are randomly assigned to
-training, test and validation sets, but without allowing any 'duplicated' scam profiles to appear in both sets.
-
-Other cleaning has included standardising the coding of missing data (including adding all variables to all JSON objects)
+Within the original data,
+many scammers have fields coded with 'or' values where the annotators have combined multiple sightings of the same
+profile using slightly different values for age, occupation, etc. Use `scripts/clean.py` to explode these options into each 
+of the possible combinations, and perform other small standardisation functions. Other cleaning has included standardising the coding of missing data (including adding all variables to all JSON objects)
 and some standardisation of case (but not spelling) on some categorical demographic data. Objects now record their scam
-and non-scam status internally, and keys are sorted. All profiles have `latitude`,`longitude` and `country` geocoding
-results added, based on queries using the `location` field. Profiles in the _training_ set have a `fold` variable which
-divides them into one of 10 randomly assigned folds, for the purposes of internal crossvalidation.
+and non-scam status internally, and keys are sorted.
 
-+  [60% training set](http://betaname.net/resources/data/romance/newtrain.tar.gz) (12,076, 2.5 M) 
-+  [20% test set](http://betaname.net/resources/data/romance/newtest.tar.gz) (4,073, 840 K)
-+  [20% validation set](http://betaname.net/resources/data/romance/newvalidation.tar.gz) (3,973, 813 K)
+Profiles should be randomly assigned to
+training, test and validation sets, but without allowing any 'duplicated' scam profiles to appear in both sets. Running `scripts/redistribute.py`
+should accomplish this for a 60/20/20 split.  Profiles in the _training_ set have a `fold` variable assigned which
+divides them into one of 10 randomly assigned folds, for the purposes of internal crossvalidation
 
-The complete cleaned data is also available in [CSV](http://betaname.net/resources/data/romance/clean.csv) for easier 
-assessment of the demographic variables. This remains mappable to the excluded field files given above.
+If required, all profiles can have `latitude`,`longitude` and `country` geocoding
+results added, based on queries using the `location` field. Run `scripts/locate.py` to accomplish this.
 
 ## Data Format
 
