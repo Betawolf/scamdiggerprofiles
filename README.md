@@ -12,7 +12,7 @@ detailed below, some different profile data is available for scammers and
 ordinary users. 
 
 This repository itself only contains the scripts used to collect and process the linked 
-data. Raw and prepared forms of the data can be gathered based on the use.
+data. Raw and prepared forms of the data can be gathered by using these scripts.
 
 ### Raw
 
